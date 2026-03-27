@@ -2,7 +2,10 @@ package com.demomo.global.security.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 
 
 import javax.crypto.SecretKey;
@@ -11,9 +14,26 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private final SecretKey key = Keys.hmacShaKeyFor("secret-key-secret-key-secret-key-secret-key".getBytes());
-    private final long expiration = 1000 * 60 * 30;// 30분
-    private final long refreshExpiration = 1000L * 60 * 60 * 24 * 14; // 14일
+
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    // (수정) expiration도 yaml에서 가져올 수 있습니다.
+    @Value("${jwt.expiration}")
+    private long expiration;
+
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
+
+    private SecretKey key;
+
+    // (추가) 객체 생성 후 실행되는 메서드
+    @PostConstruct
+    public void init() {
+        // 문자열로 된 secretKey를 SecretKey 객체로 변환
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
+
     public String createRefreshToken(String username) {
         return Jwts.builder()
                 .subject(username)
