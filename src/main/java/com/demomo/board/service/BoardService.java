@@ -1,0 +1,63 @@
+package com.demomo.board.service;
+
+import com.demomo.board.domain.Board;
+import com.demomo.board.dto.BoardRequest;
+import com.demomo.board.repository.BoardRepository;
+import com.demomo.member.domain.Member;
+import com.demomo.member.repository.MemberRepository;
+import com.demomo.board.dto.BoardResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true) // 기본적으로 읽기 전용으로 설정 (성능 이점)
+public class BoardService {
+
+    private final BoardRepository boardRepository;
+    private final MemberRepository memberRepository;
+
+    @Transactional // 쓰기 작업이므로 별도로 선언 (All or Nothing 보장)
+    public Long create(String title, String content, String username) {
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        Board board = Board.builder()
+                .title(title)
+                .content(content)
+                .member(member)
+                .build();
+
+        return boardRepository.save(board).getId();
+    }
+    @Transactional(readOnly = true)
+    public List<BoardResponse> findAll() {
+        // 레포지토리에서 fetch join을 쓴 메서드를 호출하세요!
+        return boardRepository.findAllWithMember().stream()
+                .map(BoardResponse::new) // BoardResponse(Board board) 생성자 사용
+                .toList();
+    }
+
+    public BoardResponse findById(Long id) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+        return new BoardResponse(board);
+    }
+
+    @Transactional
+    public Long update(Long id, BoardRequest request) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        board.update(request.title(), request.content());
+        return board.getId();
+        // 여기서 repository.save()를 안 호출해도 @Transactional 덕분에 DB에 반영됩니다!
+    }
+    @Transactional
+    public void delete(Long id) {
+        boardRepository.deleteById(id);
+    }
+}
