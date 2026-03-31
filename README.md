@@ -1,4 +1,3 @@
-Gemini의 응답
 🚀 Demomo Project
 Java 21 & Spring Boot 3.3.5 기반의 백엔드 데모 프로젝트입니다.
 
