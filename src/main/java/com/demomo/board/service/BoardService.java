@@ -48,16 +48,27 @@ public class BoardService {
     }
 
     @Transactional
-    public Long update(Long id, BoardRequest request) {
+    public Long update(Long id, BoardRequest request, String username) {
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        // ⭐ 검증: 게시글의 작성자 이름과 현재 로그인한 유저의 이름이 같은지 확인
+        if (!board.getMember().getUsername().equals(username)) {
+            throw new RuntimeException("본인이 작성한 글만 수정할 수 있습니다.");
+        }
 
         board.update(request.title(), request.content());
         return board.getId();
         // 여기서 repository.save()를 안 호출해도 @Transactional 덕분에 DB에 반영됩니다!
     }
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, String username) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+
+        if (!board.getMember().getUsername().equals(username)) {
+            throw new RuntimeException("본인이 작성한 글만 삭제할 수 있습니다.");
+        }
         boardRepository.deleteById(id);
     }
 }

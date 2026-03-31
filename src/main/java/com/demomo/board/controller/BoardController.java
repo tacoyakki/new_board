@@ -34,6 +34,7 @@ public class BoardController {
     public ResponseEntity<List<BoardResponse>> getAllBoards() {
         return ResponseEntity.ok(boardService.findAll());
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<BoardResponse> getBoard(@PathVariable Long id) {
         return ResponseEntity.ok(boardService.findById(id));
@@ -41,14 +42,21 @@ public class BoardController {
 
     // 4. 수정
     @PutMapping("/{id}")
-    public ResponseEntity<Long> updateBoard(@PathVariable Long id, @RequestBody BoardRequest request) {
-        return ResponseEntity.ok(boardService.update(id, request));
+    public ResponseEntity<Long> updateBoard(
+            @PathVariable Long id,
+            @RequestBody BoardRequest request,
+            @AuthenticationPrincipal String username) {
+
+        return ResponseEntity.ok(boardService.update(id, request, username));
     }
 
     // 5. 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBoard(@PathVariable Long id) {
-        boardService.delete(id);
+    public ResponseEntity<Void> deleteBoard(
+            @PathVariable Long id,
+            @AuthenticationPrincipal String username) {
+
+        boardService.delete(id, username);
         return ResponseEntity.ok().build();
     }
 }
