@@ -34,10 +34,10 @@ public class MemberController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(Authentication authentication) {
+    public ResponseEntity<?> logout(@RequestHeader("Authorization")String accessToken, Authentication authentication) {
 
         String username = authentication.getName();
-        memberService.logout(username);
+        memberService.logout(accessToken, username);
         return ResponseEntity.ok("로그아웃했어용~");
 
     }

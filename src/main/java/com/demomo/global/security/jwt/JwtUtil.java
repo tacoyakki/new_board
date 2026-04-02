@@ -89,4 +89,14 @@ public class JwtUtil {
                 .getPayload()
                 .getSubject();
     }
+    // JwtUtil.java에 추가
+    public long getExpiration(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getExpiration()
+                .getTime() - System.currentTimeMillis();
+    }
 }

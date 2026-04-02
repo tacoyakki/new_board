@@ -3,21 +3,16 @@ package com.demomo.board.domain;
 import com.demomo.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
+import com.demomo.global.domain.BaseTimeEntity;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class) // 생성/수정 시간 자동 기록
-public class Board {
+public class Board extends BaseTimeEntity{
 
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,8 +29,7 @@ public class Board {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+
 
     @Builder
     public Board(String title, String content, Member member) {

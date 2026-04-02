@@ -8,9 +8,12 @@ import com.demomo.global.security.jwt.JwtUtil;
 import com.demomo.global.security.jwt.RefreshToken;
 import com.demomo.global.security.jwt.RefreshTokenRepository;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -22,6 +25,8 @@ public class MemberService {
     private final JwtUtil jwtUtil;
     // MemberService.java 수정
     private final RefreshTokenRepository refreshTokenRepository; // 주입 추가
+    private final RedisTemplate<String, Object> redisTemplate;
+
 
     public String login(LoginRequest request) {
         Member member = memberRepository.findByUsername(request.username())
@@ -40,7 +45,7 @@ public class MemberService {
         // 3. Redis에 저장 (이미 있으면 덮어쓰기 됨)
         refreshTokenRepository.save(new RefreshToken(member.getUsername(), refreshToken));
 
-        return accessToken; // 우선은 기존처럼 Access Token만 반환하거나, DTO를 만들어 둘 다 반환하세요.
+        return accessToken;
     }
 
     public void signup(SignupRequest request) {
@@ -90,8 +95,13 @@ public class MemberService {
 
         return jwtUtil.createAccessToken(member.getUsername(), member.getRole().name());
     }
-    public void logout(String username){
+    public void logout(String accessToken, String username){// 1. RT 삭제 (완료)
         refreshTokenRepository.deleteById(username);
+        String pureToken = accessToken.substring(7);
+        long expiration = jwtUtil.getExpiration(pureToken);
+        // 2. AT 블랙리스트 등록 (이게 있어야 함!)
+        // "Bearer " 떼고 순수 토큰만 저장해!
+        redisTemplate.opsForValue().set(pureToken, "logout", expiration, TimeUnit.MILLISECONDS);
         System.out.println("로그아웃했어요 " + username + "님!");
     }
 }
