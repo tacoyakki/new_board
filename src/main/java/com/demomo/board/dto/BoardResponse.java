@@ -11,7 +11,7 @@ public record BoardResponse(
         String content,
         String writer,
 
-        @JsonFormat(pattern = "yyyy년 MM월 dd일 HH시 mm분 ss초")
+        @JsonFormat(pattern = "yyyy년 MM월 dd일 HH:mm")
         LocalDateTime createdAt
 ) {
     public BoardResponse(Board board) {
