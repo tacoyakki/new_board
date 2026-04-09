@@ -6,6 +6,8 @@ import com.demomo.board.repository.BoardRepository;
 import com.demomo.member.domain.Member;
 import com.demomo.member.repository.MemberRepository;
 import com.demomo.board.dto.BoardResponse;
+import com.demomo.board.repository.CommentRepository;
+import com.demomo.board.domain.Comment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional // 쓰기 작업이므로 별도로 선언 (All or Nothing 보장)
     public Long create(String title, String content, String username) {
@@ -42,9 +45,16 @@ public class BoardService {
     }
 
     public BoardResponse findById(Long id) {
+        // 1. 게시글 찾기
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
-        return new BoardResponse(board);
+
+        // 2. (추가) 해당 게시글의 댓글들 다 가져오기
+        List<Comment> comments = commentRepository.findAllByBoardId(id);
+
+        // 3. (수정) 게시글과 댓글 목록을 함께 담아서 반환!
+        // 어제 수정한 BoardResponse(Board board, List<Comment> comments) 생성자가 쓰여!
+        return new BoardResponse(board, comments);
     }
 
     @Transactional
