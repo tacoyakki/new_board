@@ -31,4 +31,7 @@ public class Comment extends BaseTimeEntity { // 👈 시간 자동화 상속!
         this.board = board;
         this.member = member;
     }
+    public void update(String content) {
+        this.content = content;
+    }
 }

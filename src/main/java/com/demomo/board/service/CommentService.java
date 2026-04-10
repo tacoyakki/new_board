@@ -21,6 +21,7 @@ public class CommentService {
     private final BoardRepository boardRepository;
     private final MemberRepository memberRepository;
 
+
     @Transactional
     public Long create(Long boardId, CommentRequest request, String username) {
         // 1. 해당 게시글이 있는지 확인
@@ -42,6 +43,27 @@ public class CommentService {
         return commentRepository.save(comment).getId();
     }
     @Transactional
+    public Long updateComment(Long id, CommentRequest request, String username) {
+        // 1. 댓글이 있는지 확인
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("해당 댓글이 존재하지 않습니다."));
+
+        // 2. 수정을 요청한 유저 정보 가져오기
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+
+        // 3. 권한 체크: 작성자 본인도 아니고 관리자도 아니면 에러!
+        if (!comment.getMember().getUsername().equals(username) && member.getRole() != Role.ADMIN) {
+            throw new RuntimeException("수정 권한이 없습니다.");
+        }
+
+        // 4. 내용 업데이트 (Dirty Checking으로 자동 반영됨)
+        comment.update(request.content());
+
+        return comment.getId();
+    }
+
+    @Transactional
     public void deleteComment(Long commentId, String username) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글이 없습니다."));
@@ -49,7 +71,6 @@ public class CommentService {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        // ⭐ 게시글이랑 똑같이! 본인이 아니더라도 관리자면 통과!
         if (!comment.getMember().getUsername().equals(username) && member.getRole() != Role.ADMIN) {
             throw new RuntimeException("삭제 권한이 없습니다.");
         }
