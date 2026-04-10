@@ -39,6 +39,6 @@ public class MemberController {
         String username = authentication.getName();
         memberService.logout(accessToken, username);
         return ResponseEntity.ok("로그아웃했어용~");
-
     }
 }
+
