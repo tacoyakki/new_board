@@ -25,12 +25,23 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // global/config/SecurityConfig.java 파일의 filterChain 메서드를 이렇게 수정해줘!
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
+                // ⭐ 1. 프론트엔드(Live Server 5500포트)가 통신할 수 있도록 문 열어주기 (CORS 설정)
+                .cors(cors -> cors.configurationSource(request -> {
+                    var config = new org.springframework.web.cors.CorsConfiguration();
+                    // Live Server가 사용하는 주소들을 모두 허용해줍니다.
+                    config.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5500", "http://localhost:5500"));
+                    config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowedHeaders(java.util.List.of("*"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // SecurityConfig.java의 filterChain 메서드 수정
                         .requestMatchers("/api/members/signup", "/api/members/login", "/api/members/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
                         .anyRequest().authenticated()

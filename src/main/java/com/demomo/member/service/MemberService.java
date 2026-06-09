@@ -59,7 +59,7 @@ public class MemberService {
         Member member = Member.builder()
                 .username(request.username())
                 .password(encodedPassword)
-                .role(request.role())
+                .role(com.demomo.member.domain.Role.USER)
                 .build();
 
         memberRepository.save(member);
