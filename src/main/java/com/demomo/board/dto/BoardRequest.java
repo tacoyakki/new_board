@@ -4,4 +4,5 @@ package com.demomo.board.dto;
 public record BoardRequest(
         String title,
         String content
+
 ) {}

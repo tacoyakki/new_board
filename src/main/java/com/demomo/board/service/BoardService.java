@@ -29,7 +29,7 @@ public class BoardService {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        Board board = Board.builder()
+        Board board =   Board.builder()
                 .title(title)
                 .content(content)
                 .member(member)
@@ -44,14 +44,17 @@ public class BoardService {
                 .map(BoardResponse::new) // BoardResponse(Board board) 생성자 사용
                 .toList();
     }
-
+    @Transactional
     public BoardResponse findById(Long id) {
         // 1. 게시글 찾기
+
         Board board = boardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
 
+        board.increaseViewCount();
         // 2. (추가) 해당 게시글의 댓글들 다 가져오기
         List<Comment> comments = commentRepository.findAllByBoardId(id);
+
 
         // 3. (수정) 게시글과 댓글 목록을 함께 담아서 반환!
         // 어제 수정한 BoardResponse(Board board, List<Comment> comments) 생성자가 쓰여!

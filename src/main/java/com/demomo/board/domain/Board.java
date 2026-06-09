@@ -13,7 +13,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class) // 생성/수정 시간 자동 기록
 public class Board extends BaseTimeEntity{
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,6 +28,7 @@ public class Board extends BaseTimeEntity{
     @JoinColumn(name = "member_id")
     private Member member;
 
+    private int viewCount = 0;
 
 
     @Builder
@@ -36,6 +36,10 @@ public class Board extends BaseTimeEntity{
         this.title = title;
         this.content = content;
         this.member = member;
+    }
+
+    public void increaseViewCount() {
+        this.viewCount++;
     }
 
     public void update(String title, String content) {
