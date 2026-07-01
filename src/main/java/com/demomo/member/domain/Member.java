@@ -17,14 +17,20 @@ public class Member {
 
     private String password;
 
+    private String oauthProvider;
+
+    private String oauthProviderId;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
     // 생성자
     @Builder
-    public Member(String username, String password, Role role) {
+    public Member(String username, String password, Role role, String oauthProvider, String oauthProviderId) {
         this.username = username;
         this.password = password;
         this.role = role;
+        this.oauthProvider = oauthProvider;
+        this.oauthProviderId = oauthProviderId;
     }
 }

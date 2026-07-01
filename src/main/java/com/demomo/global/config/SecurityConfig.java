@@ -1,6 +1,9 @@
 package com.demomo.global.config;
 
 import com.demomo.global.security.jwt.JwtFilter;
+import com.demomo.global.security.oauth.OAuth2AuthenticationFailureHandler;
+import com.demomo.global.security.oauth.OAuth2AuthenticationSuccessHandler;
+import com.demomo.global.security.oauth.OAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +22,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final OAuth2UserService oauth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -42,10 +48,16 @@ public class SecurityConfig {
                 }))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/styles.css", "/app.js", "/favicon.svg", "/error").permitAll()
+                        .requestMatchers("/", "/index.html", "/styles.css", "/oauth.css", "/app.js", "/favicon.svg", "/error").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/api/members/signup", "/api/members/login", "/api/members/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+                        .successHandler(oauth2AuthenticationSuccessHandler)
+                        .failureHandler(oauth2AuthenticationFailureHandler)
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

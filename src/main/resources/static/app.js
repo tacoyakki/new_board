@@ -1,3 +1,8 @@
+const oauthResult=new URLSearchParams(location.hash.slice(1));
+const oauthToken=oauthResult.get('oauth_token');
+if(oauthToken){localStorage.setItem('demomo_token',oauthToken);history.replaceState(null,'',location.pathname+location.search)}
+const oauthFailed=oauthResult.has('oauth_error');
+if(oauthFailed)history.replaceState(null,'',location.pathname+location.search);
 const state={boards:[],token:localStorage.getItem('demomo_token'),username:null,authMode:'login',activeBoard:null};
 const $=(s,p=document)=>p.querySelector(s), $$=(s,p=document)=>[...p.querySelectorAll(s)];
 const els={grid:$('#postGrid'),empty:$('#emptyState'),authModal:$('#authModal'),writeModal:$('#writeModal'),detail:$('#detailLayer'),drawer:$('#detailDrawer'),toast:$('#toast'),authButton:$('#authButton'),search:$('#searchInput'),sort:$('#sortSelect')};
@@ -34,3 +39,5 @@ $('#authForm').onsubmit=async e=>{e.preventDefault();const data=Object.fromEntri
 els.authButton.onclick=()=>{if(state.token){state.token=null;state.username=null;localStorage.removeItem('demomo_token');updateAuthUI();toast('로그아웃했어요.')}else openLayer(els.authModal)};
 $('#writeButton').onclick=()=>openWrite();$('#heroWrite').onclick=()=>openWrite();$$('[data-open-write]').forEach(b=>b.onclick=()=>openWrite());$('#searchToggle').onclick=()=>{document.querySelector('.content-shell').scrollIntoView();setTimeout(()=>els.search.focus(),350)};els.search.oninput=renderBoards;els.sort.onchange=renderBoards;$$('[data-auth-tab]').forEach(b=>b.onclick=()=>setAuthMode(b.dataset.authTab));$('[data-switch-auth]').onclick=()=>setAuthMode('signup');$$('.modal-layer [data-close]').forEach(b=>b.onclick=()=>closeLayer(b.closest('.modal-layer')));$('.drawer-backdrop').onclick=()=>closeLayer(els.detail);document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.open').forEach(closeLayer)});els.drawer.addEventListener('click',async e=>{const id=e.target.dataset.deleteComment;if(!id)return;if(!confirm('댓글을 삭제할까요?'))return;try{await api(`/api/comments/${id}`,{method:'DELETE'});toast('댓글을 삭제했어요.');openDetail(state.activeBoard.id)}catch(err){toast(err.message)}});
 updateAuthUI();loadBoards();
+if(oauthToken)setTimeout(()=>toast(`${state.username}님, Google 로그인이 완료됐어요.`),100);
+if(oauthFailed)setTimeout(()=>toast('Google 로그인에 실패했어요. 다시 시도해 주세요.'),100);
