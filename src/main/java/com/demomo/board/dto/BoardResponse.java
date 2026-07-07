@@ -16,10 +16,11 @@ public record BoardResponse(
         List<CommentResponse> comments, // 댓글 목록
         @JsonFormat(pattern = "yyyy년 MM월 dd일 HH:mm")
         LocalDateTime createdAt,
-        Integer viewCount
+        Integer viewCount,
+        long commentCount
 ) {
     // 1. 전체 목록 조회용 생성자 (댓글이 필요 없을 때)
-    public BoardResponse(Board board) {
+    public BoardResponse(Board board, long commentCount) {
         this(
                 board.getId(),
                 board.getTitle(),
@@ -27,7 +28,8 @@ public record BoardResponse(
                 board.getMember().getUsername(),
                 null, // 목록에서는 댓글을 안 보여줄 거니까 null 또는 빈 리스트
                 board.getCreatedAt(),
-                board.getViewCount()
+                board.getViewCount(),
+                commentCount
         );
     }
 
@@ -40,7 +42,8 @@ public record BoardResponse(
                 board.getMember().getUsername(),
                 comments.stream().map(CommentResponse::new).toList(),
                 board.getCreatedAt(),
-                board.getViewCount()
+                board.getViewCount(),
+                comments.size()
         );
     }
 }

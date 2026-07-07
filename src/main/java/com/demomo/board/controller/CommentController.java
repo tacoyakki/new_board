@@ -3,6 +3,7 @@ package com.demomo.board.controller;
 import com.demomo.board.dto.CommentRequest;
 import com.demomo.board.service.CommentService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class CommentController {
     @PutMapping("/{id}")
     public ResponseEntity<Long> updateComment(
             @PathVariable Long id,
-            @RequestBody CommentRequest request,
+            @Valid @RequestBody CommentRequest request,
             @AuthenticationPrincipal String username) { // 🟢 UserDetails 대신 String 으로 변경!
 
         Long updatedId = commentService.updateComment(id, request, username); // 🟢 바로 username 사용
@@ -39,7 +40,7 @@ public class CommentController {
     @PostMapping("/{boardId}")
     public ResponseEntity<Long> createComment(
             @PathVariable Long boardId,
-            @RequestBody CommentRequest request,
+            @Valid @RequestBody CommentRequest request,
             @AuthenticationPrincipal String username) { // 🟢 String 으로 변경!
 
         Long commentId = commentService.create(boardId, request, username); // 🟢 바로 username 사용

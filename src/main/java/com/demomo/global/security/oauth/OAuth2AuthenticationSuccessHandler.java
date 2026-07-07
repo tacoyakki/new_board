@@ -1,6 +1,7 @@
 package com.demomo.global.security.oauth;
 
 import com.demomo.global.security.jwt.JwtUtil;
+import com.demomo.member.domain.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private final JwtUtil jwtUtil;
+    private final OAuth2UserService oAuth2UserService;
 
     @Value("${app.oauth2.success-redirect-uri}")
     private String successRedirectUri;
@@ -26,9 +28,17 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         OAuth2User user = (OAuth2User) authentication.getPrincipal();
+        String providerId = user.getAttribute("sub");
+        String email = user.getAttribute("email");
+        if (providerId == null || email == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "OAuth 회원 정보를 확인할 수 없습니다.");
+            return;
+        }
+        Member member = oAuth2UserService.findOrCreateGoogleMember(email, providerId);
+        String username = member.getUsername();
         String role = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority)
                 .findFirst().orElse("ROLE_USER").replaceFirst("^ROLE_", "");
-        String token = jwtUtil.createAccessToken(user.getName(), role);
+        String token = jwtUtil.createAccessToken(username, role);
         String redirect = UriComponentsBuilder.fromUriString(successRedirectUri)
                 .fragment("oauth_token=" + token).build(true).toUriString();
         if (request.getSession(false) != null) {

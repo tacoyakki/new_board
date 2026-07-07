@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,10 +17,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import io.jsonwebtoken.JwtException;
 
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+    private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
 
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -49,6 +53,10 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             String username = jwtUtil.getUsername(token);
             String role = jwtUtil.getRole(token);
+            if (role == null || role.isBlank()) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
 
             String finalRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
@@ -58,15 +66,11 @@ public class JwtFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
 
-        } catch (Exception e) {
-            //  여기서 에러를 강제로 출력!
-            System.out.println("[JwtFilter 에러 발생]: " + e.getMessage());
-            e.printStackTrace();
-
-            // 클라이언트에게 에러 메시지 전달
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("Invalid JWT", e);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"error\": \"필터에서 문제가 생겼어용: " + e.getMessage() + "\"}");
+            response.getWriter().write("{\"message\":\"유효하지 않은 인증 토큰입니다.\"}");
         }
     }
 }

@@ -4,6 +4,7 @@ import com.demomo.board.dto.BoardRequest;
 import com.demomo.board.dto.BoardResponse;
 import com.demomo.board.service.BoardService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class BoardController {
     // 1. 게시글 생성
     @PostMapping
     public ResponseEntity<Long> createBoard(
-            @RequestBody BoardRequest request, // BoardRequest로 이름 변경
+            @Valid @RequestBody BoardRequest request,
             @AuthenticationPrincipal String username) {
 
         // record는 getter가 아니라 필드명()으로 호출!
@@ -43,7 +44,7 @@ public class BoardController {
     @PutMapping("/{id}")
     public ResponseEntity<Long> updateBoard(
             @PathVariable Long id,
-            @RequestBody BoardRequest request,
+            @Valid @RequestBody BoardRequest request,
             @AuthenticationPrincipal String username) {
 
         return ResponseEntity.ok(boardService.update(id, request, username));

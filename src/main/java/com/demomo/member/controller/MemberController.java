@@ -2,8 +2,10 @@ package com.demomo.member.controller;
 
 import com.demomo.member.dto.LoginRequest;
 import com.demomo.member.dto.SignupRequest;
+import com.demomo.member.dto.AuthResponse;
 import com.demomo.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,19 +18,19 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/signup")
-    public String signup(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<Void> signup(@Valid @RequestBody SignupRequest signupRequest) {
         memberService.signup(signupRequest);
-        return "회원가입성공!!!!!!!!!!!!!";
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest loginRequest) {
+    public AuthResponse login(@Valid @RequestBody LoginRequest loginRequest) {
 
         return memberService.login(loginRequest);
     }
 
     @PostMapping("/reissue")
-    public String reissue(@RequestHeader("RefreshToken") String refreshToken) {
+    public AuthResponse reissue(@RequestHeader("RefreshToken") String refreshToken) {
 
         return memberService.reissue(refreshToken);
     }
@@ -38,7 +40,7 @@ public class MemberController {
 
         String username = authentication.getName();
         memberService.logout(accessToken, username);
-        return ResponseEntity.ok("로그아웃했어용~");
+        return ResponseEntity.noContent().build();
     }
 }
 

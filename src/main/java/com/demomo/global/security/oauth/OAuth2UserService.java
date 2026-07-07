@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,18 +24,24 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
     private final MemberRepository memberRepository;
 
     @Override
+    @Transactional
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User googleUser = super.loadUser(userRequest);
         String providerId = requiredAttribute(googleUser, "sub");
         String email = requiredAttribute(googleUser, "email");
-        Member member = memberRepository.findByOauthProviderAndOauthProviderId(PROVIDER, providerId)
-                .orElseGet(() -> createGoogleMember(email, providerId));
+        Member member = findOrCreateGoogleMember(email, providerId);
 
         Map<String, Object> attributes = new HashMap<>(googleUser.getAttributes());
         attributes.put("demomoUsername", member.getUsername());
         return new DefaultOAuth2User(
                 List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name())),
                 attributes, "demomoUsername");
+    }
+
+    @Transactional
+    public Member findOrCreateGoogleMember(String email, String providerId) {
+        return memberRepository.findByOauthProviderAndOauthProviderId(PROVIDER, providerId)
+                .orElseGet(() -> createGoogleMember(email, providerId));
     }
 
     private Member createGoogleMember(String email, String providerId) {
