@@ -42,3 +42,7 @@ $('#writeButton').onclick=()=>openWrite();$('#heroWrite').onclick=()=>openWrite(
 updateAuthUI();loadBoards();
 if(oauthToken)setTimeout(()=>toast(`${state.username}님, Google 로그인이 완료됐어요.`),100);
 if(oauthFailed)setTimeout(()=>toast('Google 로그인에 실패했어요. 다시 시도해 주세요.'),100);
+if(new URLSearchParams(location.search).get('write')==='true'){
+  history.replaceState({},'',location.pathname);
+  setTimeout(()=>openWrite(),150);
+}

@@ -50,7 +50,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/styles.css", "/oauth.css", "/app.js", "/favicon.svg", "/error").permitAll()
+                        .requestMatchers("/", "/index.html", "/boards.html", "/styles.css", "/pages.css", "/oauth.css", "/app.js", "/favicon.svg", "/error").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/api/members/signup", "/api/members/login", "/api/members/reissue").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/boards/**").permitAll()
