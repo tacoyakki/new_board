@@ -13,6 +13,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     void deleteAllByBoardId(Long boardId);
 
+    void deleteAllByMemberId(Long memberId);
+
+    void deleteAllByBoardMemberId(Long memberId);
+
     @Query("select c.board.id as boardId, count(c.id) as commentCount from Comment c group by c.board.id")
     List<CommentCount> countAllGroupedByBoard();
 

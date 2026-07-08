@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -36,9 +35,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         }
         Member member = oAuth2UserService.findOrCreateGoogleMember(email, providerId);
         String username = member.getUsername();
-        String role = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority)
-                .findFirst().orElse("ROLE_USER").replaceFirst("^ROLE_", "");
-        String token = jwtUtil.createAccessToken(username, role);
+        String token = jwtUtil.createAccessToken(username, member.getRole().name());
         String redirect = UriComponentsBuilder.fromUriString(successRedirectUri)
                 .fragment("oauth_token=" + token).build(true).toUriString();
         if (request.getSession(false) != null) {

@@ -8,6 +8,8 @@ public record CommentResponse(
         Long id,
         String content,
         String writer,
+        String writerNickname,
+        String writerProfileImageUrl,
         @JsonFormat(pattern = "yyyy년 MM월 dd일 HH:mm")
         LocalDateTime createdAt
 ) {
@@ -17,6 +19,8 @@ public record CommentResponse(
                 comment.getId(),
                 comment.getContent(),
                 comment.getMember().getUsername(),
+                comment.getMember().getDisplayName(),
+                comment.getMember().getProfileImageUrl(),
                 comment.getCreatedAt()
         );
     }

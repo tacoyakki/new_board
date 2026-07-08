@@ -9,12 +9,17 @@ import com.demomo.global.security.jwt.RefreshToken;
 import com.demomo.global.security.jwt.RefreshTokenRepository;
 import com.demomo.global.exception.ApiException;
 import com.demomo.member.dto.AuthResponse;
+import com.demomo.member.dto.ProfileResponse;
+import com.demomo.member.dto.UpdateProfileRequest;
+import com.demomo.board.repository.BoardRepository;
+import com.demomo.board.repository.CommentRepository;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +34,9 @@ public class MemberService {
     // MemberService.java 수정
     private final RefreshTokenRepository refreshTokenRepository; // 주입 추가
     private final RedisTemplate<String, Object> redisTemplate;
+    private final BoardRepository boardRepository;
+    private final CommentRepository commentRepository;
+    private final ProfileImageService profileImageService;
 
 
     public AuthResponse login(LoginRequest request) {
@@ -74,6 +82,27 @@ public class MemberService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
     }
 
+    @Transactional(readOnly = true)
+    public ProfileResponse getProfile(String username) {
+        return new ProfileResponse(findByUsername(username));
+    }
+
+    @Transactional
+    public ProfileResponse updateProfile(String username, UpdateProfileRequest request) {
+        if (request.nickname() != null && request.nickname().trim().length() > 30) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "닉네임은 30자 이하로 입력해 주세요.");
+        }
+        if (request.bio() != null && request.bio().trim().length() > 300) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "소개는 300자 이하로 입력해 주세요.");
+        }
+        if (request.profileImageUrl() != null && request.profileImageUrl().trim().length() > 1000) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "프로필 이미지 주소가 너무 깁니다.");
+        }
+        Member member = findByUsername(username);
+        member.updateProfile(request.nickname(), request.bio(), request.profileImageUrl());
+        return new ProfileResponse(member);
+    }
+
     public AuthResponse reissue(String refreshToken) {
         // 1. 리프레시 토큰 자체가 유효한지 확인 (만료 여부 등)
         if (!jwtUtil.isValid(refreshToken)) {
@@ -110,6 +139,34 @@ public class MemberService {
         // "Bearer " 떼고 순수 토큰만 저장해!
         if (expiration > 0) {
             redisTemplate.opsForValue().set(pureToken, "logout", expiration, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    @Transactional
+    public void withdraw(String accessToken, String username) {
+        Member member = findByUsername(username);
+        commentRepository.deleteAllByMemberId(member.getId());
+        commentRepository.deleteAllByBoardMemberId(member.getId());
+        boardRepository.deleteAllByMemberId(member.getId());
+        memberRepository.delete(member);
+        memberRepository.flush();
+
+        profileImageService.delete(member.getProfileImageUrl());
+        clearTokensAfterWithdrawal(accessToken, username);
+    }
+
+    private void clearTokensAfterWithdrawal(String accessToken, String username) {
+        try {
+            refreshTokenRepository.deleteById(username);
+            if (accessToken != null && accessToken.startsWith("Bearer ")) {
+                String token = accessToken.substring(7);
+                long expiration = jwtUtil.getExpiration(token);
+                if (expiration > 0) {
+                    redisTemplate.opsForValue().set(token, "withdrawn", expiration, TimeUnit.MILLISECONDS);
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // DB 회원 삭제 후에는 기존 토큰으로 회원 기능을 사용할 수 없습니다.
         }
     }
 }

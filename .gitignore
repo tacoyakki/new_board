@@ -48,3 +48,6 @@ out/
 
 ###yaml###
 src/main/resources/application.yaml
+
+### uploaded profile images ###
+uploads/

@@ -13,6 +13,8 @@ public record BoardResponse(
         String title,
         String content,
         String writer,
+        String writerNickname,
+        String writerProfileImageUrl,
         List<CommentResponse> comments, // 댓글 목록
         @JsonFormat(pattern = "yyyy년 MM월 dd일 HH:mm")
         LocalDateTime createdAt,
@@ -26,6 +28,8 @@ public record BoardResponse(
                 board.getTitle(),
                 board.getContent(),
                 board.getMember().getUsername(),
+                board.getMember().getDisplayName(),
+                board.getMember().getProfileImageUrl(),
                 null, // 목록에서는 댓글을 안 보여줄 거니까 null 또는 빈 리스트
                 board.getCreatedAt(),
                 board.getViewCount(),
@@ -40,6 +44,8 @@ public record BoardResponse(
                 board.getTitle(),
                 board.getContent(),
                 board.getMember().getUsername(),
+                board.getMember().getDisplayName(),
+                board.getMember().getProfileImageUrl(),
                 comments.stream().map(CommentResponse::new).toList(),
                 board.getCreatedAt(),
                 board.getViewCount(),
